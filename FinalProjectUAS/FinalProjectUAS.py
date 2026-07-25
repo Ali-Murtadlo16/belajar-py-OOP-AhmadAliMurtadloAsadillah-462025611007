@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from sqlite3.dbapi2 import SQLITE_ANALYZE
 class InvalidInputError(Exception):
     pass
 class DataNotFoundError(Exception):
@@ -13,21 +12,21 @@ class KoneksiDatabase(ABC):
         pass
 class DataBaseInMemory(KoneksiDatabase):
     def __init__(self):
-        self.__db = []
+        self.__db = {}
     def simpan_data(self, mahasiswa):
         self.__db[mahasiswa.nim] = mahasiswa
     def ambil_data(self):
         return self.__db
     def cari_by_nim(self, nim):
         return self.__db.get(nim)
-class user:
+class User:
     def __init__(self, nama_lengkap: str):
-        self.nama_lengkap = nama_lengkap
+        self._nama_lengkap = nama_lengkap
     @property
     def nama_lengkap(self):
-        return self.nama_lengkap
-class Mahasiswa(user):
-    def __init__(self, nama: str, nim: str, semester: int, prodi: str, tujuan:str, alasan: str, waktu_keluar:  str):
+        return self._nama_lengkap
+class Mahasiswa(User):
+    def __init__(self, nama: str, nim: str, semester: int, prodi: str, tujuan: str, alasan: str, waktu_keluar: str):
         super().__init__(nama)
         self.__nim = nim
         self.__semester = semester
@@ -66,7 +65,7 @@ class Mahasiswa(user):
         return self.__keluar_count
     @property
     def status_izin(self):
-        return self.status_izin
+        return self.__status_izin
     @status_izin.setter
     def status_izin(self, status):
         self.__status_izin = status
@@ -74,38 +73,38 @@ class Mahasiswa(user):
         self.__keluar_count += 1
     def __str__(self):
         return (
-            f"\n========== DATA E-PERIZINAN MAHASISWA=========="
-            f"Nama          : {self.nama_lengkap}"
-            f"NIM           : {self.__nim}"
-            f"Semester      : {self.__semester}"
-            f"Prodi         : {self.__prodi}"
-            f"Tujuan        : {self.__tujuan}"
-            f"Alasan        : {self.__alasan}"
-            f"Waktu Keluar  : {self.__waktu_keluar}"
-            f"Keluar Count  : {self.__keluar_count}"
-            f"Status Izin   : {self.__status_izin}"
+            f"\n========== DATA E-PERIZINAN MAHASISWA =========="
+            f"\nNama          : {self.nama_lengkap}"
+            f"\nNIM           : {self.__nim}"
+            f"\nSemester      : {self.__semester}"
+            f"\nProdi         : {self.__prodi}"
+            f"\nTujuan        : {self.__tujuan}"
+            f"\nAlasan        : {self.__alasan}"
+            f"\nWaktu Keluar  : {self.__waktu_keluar}"
+            f"\nKeluar Count  : {self.__keluar_count}"
+            f"\nStatus Izin   : {self.__status_izin}"
         )
-class StafDeKaPe(user):
+class StafDeKaPe(User):
     def __init__(self, nama: str, id_staf: str):
         super().__init__(nama)
         self.__id_staf = id_staf
-    def proses_pesan_masuk(self, mhs: mahasiswa, setuju: bool):
+    def proses_pesan_masuk(self, mhs: Mahasiswa, setuju: bool):
         if setuju:
             mhs.status_izin = "Disetujui"
-            print(f"[AKSES STAF] Izin Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.__nim}) Telah Disetujui")
+            print(f"[AKSES STAF] Izin Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.nim}) Telah Disetujui")
         else:
             mhs.status_izin = "Ditolak"
-            print(f"[AKSES STAF] Izin Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.__nim}) Telah Ditolak")
-class SatpamGerbangKampus(user):
+            print(f"[AKSES STAF] Izin Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.nim}) Telah Ditolak")
+class SatpamGerbangKampus(User):
     def __init__(self, nama: str, id_satpam: str):
         super().__init__(nama)
         self.__id_satpam = id_satpam
-    def verifikasi_kembali(self, mhs: mahasiswa):
+    def verifikasi_kembali(self, mhs: Mahasiswa):
         mhs.status_izin = "Sudah Kembali"
-        print(f"[POS {self.__id_satpam}] Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.__nim}) Terverifikasi dan Sudah Kembali")
+        print(f"[POS {self.__id_satpam}] Mahasiswa {mhs.nama_lengkap}(NIM:{mhs.nim}) Terverifikasi dan Sudah Kembali")
 class SistemPerizinan:
     @staticmethod
-    def verifikasi_jam_malam(waktu_keluar: str)-> str:
+    def verifikasi_jam_malam(waktu_keluar: str) -> str:
         waktu = waktu_keluar.lower().strip()
         if waktu in ["pagi", "siang", "sore", "malam"]:
             return "Peringatan harus kembali paling lambat sebelum jam 22.00 PM"
@@ -118,7 +117,7 @@ class SistemPerizinan:
             raise InvalidInputError("Format pesan WhatsApp tidak valid! Gunakan: #IZIN;Nama;NIM;Semester;Prodi;Tujuan;Alasan;Waktu")
         return parts
 def main():
-    db = DatabaseInMemory()
+    db = DataBaseInMemory()
     staf_piket = StafDeKaPe("Ust. Ahmad", "STF-001")
     satpam_pos = SatpamGerbangKampus("Pak Budi", "SAT-001")
     print("========================================")
@@ -139,13 +138,13 @@ def main():
                 print("b. Form Interaktif")
                 mode = input("Pilih mode input (a/b): ").lower().strip()
                 if mode == "a":
-                    raw_wa = input("Maasukkan Teks WA: ")
+                    raw_wa = input("Masukkan Teks WA: ")
                     data = SistemPerizinan.parse_wa_command(raw_wa)
                     nama, nim, sem, prodi = data[1], data[2], int(data[3]), data[4]
                     tujuan, alasan, waktu = data[5], data[6], data[7]
-                elif mode =="b":
+                elif mode == "b":
                     nama = input("Nama Lengkap: ").strip()
-                    nim = input("NIIM: ").strip()
+                    nim = input("NIM: ").strip()
                     sem_str = input("Semester: ").strip()
                     if not sem_str.isdigit():
                         raise InvalidInputError("Semester harus berupa angka input Integer!")
@@ -162,10 +161,10 @@ def main():
                     mhs_existing.tujuan = tujuan
                     mhs_existing.waktu_keluar = waktu
                     mhs_existing.status_izin = "Pending"
-                    print(f"\n[]INFO") Data NIM {nim} diperbarui (Pengajuan Perizinan ke--{mhs_existing.keluar_count}). Status: Pending.")
+                    print(f"\n[INFO] Data NIM {nim} diperbarui (Pengajuan Perizinan ke--{mhs_existing.keluar_count}). Status: Pending.")
                 else:
                     mhs_baru = Mahasiswa(nama, nim, sem, prodi, tujuan, alasan, waktu)
-                    db.simpan_data_mahasiswa(mhs_baru)
+                    db.simpan_data(mhs_baru)
                     print(f"\n[SUCCESS] Pengajuan perizinan baru berhasil disimpan ke database.")
                 print(SistemPerizinan.verifikasi_jam_malam(waktu))
             elif pilihan == "2":
@@ -202,5 +201,5 @@ def main():
             print(f"\n[NOT FOUND ERROR] {e}")
         except Exception as e:
             print(f"\n[SYSTEM ERROR] Terjadi kesalahan sistem: {e}")
-if __name__ == "__Main__":
+if __name__ == "__main__":
     main()
