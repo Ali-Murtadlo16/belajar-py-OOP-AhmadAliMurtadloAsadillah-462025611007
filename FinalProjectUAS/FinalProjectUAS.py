@@ -134,4 +134,73 @@ def main():
         pilihan = input("Pilih menu (1-5): ").strip()
         try:
             if pilihan == "1":
-                print()
+                print("\n[  Tipe Input  ]")
+                print("a. Format Teks WhatsApp (#IZIN;Nama;NIM;Semester;Prodi;Tujuan;Alasan;Waktu)")
+                print("b. Form Interaktif")
+                mode = input("Pilih mode input (a/b): ").lower().strip()
+                if mode == "a":
+                    raw_wa = input("Maasukkan Teks WA: ")
+                    data = SistemPerizinan.parse_wa_command(raw_wa)
+                    nama, nim, sem, prodi = data[1], data[2], int(data[3]), data[4]
+                    tujuan, alasan, waktu = data[5], data[6], data[7]
+                elif mode =="b":
+                    nama = input("Nama Lengkap: ").strip()
+                    nim = input("NIIM: ").strip()
+                    sem_str = input("Semester: ").strip()
+                    if not sem_str.isdigit():
+                        raise InvalidInputError("Semester harus berupa angka input Integer!")
+                    sem = int(sem_str)
+                    prodi = input("Prodi: ").strip()
+                    tujuan = input("Tujuan: ").strip()
+                    alasan = input("Alasan: ").strip()
+                    waktu = input("Waktu: ").strip()
+                else:
+                    raise InvalidInputError("Pilihan input tidak valid!")
+                mhs_existing = db.cari_by_nim(nim)
+                if mhs_existing:
+                    mhs_existing.catat_keluar()
+                    mhs_existing.tujuan = tujuan
+                    mhs_existing.waktu_keluar = waktu
+                    mhs_existing.status_izin = "Pending"
+                    print(f"\n[]INFO") Data NIM {nim} diperbarui (Pengajuan Perizinan ke--{mhs_existing.keluar_count}). Status: Pending.")
+                else:
+                    mhs_baru = Mahasiswa(nama, nim, sem, prodi, tujuan, alasan, waktu)
+                    db.simpan_data_mahasiswa(mhs_baru)
+                    print(f"\n[SUCCESS] Pengajuan perizinan baru berhasil disimpan ke database.")
+                print(SistemPerizinan.verifikasi_jam_malam(waktu))
+            elif pilihan == "2":
+                nim = input("\nMasukkan NIM mahasiswa yang akan diproses oleh staf: ").strip()
+                mhs = db.cari_by_nim(nim)
+                if not mhs:
+                    raise DataNotFoundError(f"Data mahasiswa dengan NIM {nim} tidak ditemukan.")
+                print(mhs)
+                acc = input("Setujui perizinan? (y/n): ").lower().strip()
+                is_approved = True if acc == 'y' else False
+                staf_piket.proses_pesan_masuk(mhs, is_approved)
+            elif pilihan == "3":
+                data_semua = db.ambil_data()
+                if not data_semua:
+                    print("\n[DASBOR REKAP] Belum ada data perizinan terdaftar.")
+                else:
+                    print("\n========== DASBOR MONITORING REKAP HARIAN ==========")
+                    for mhs in data_semua.values():
+                        print(mhs)
+            elif pilihan == "4":
+                nim = input("\nMasukkan NIM Mahasiswa yang kembali ke kampus: ").strip()
+                mhs = db.cari_by_nim(nim)
+                if not mhs:
+                    raise DataNotFoundError(f"Mahasiswa dengan NIM {nim} tidak ditemukan di logbook!")
+                satpam_pos.verifikasi_kembali(mhs)
+            elif pilihan == "5":
+                print("Sistem E-Perizinan dihentikan. Terima kasih.")
+                break
+            else:
+                print("Pilihan menu tidak valid, silakan coba lagi!")
+        except InvalidInputError as e:
+            print(f"\n[INPUT ERROR] {e}")
+        except DataNotFoundError as e:
+            print(f"\n[NOT FOUND ERROR] {e}")
+        except Exception as e:
+            print(f"\n[SYSTEM ERROR] Terjadi kesalahan sistem: {e}")
+if __name__ == "__Main__":
+    main()
