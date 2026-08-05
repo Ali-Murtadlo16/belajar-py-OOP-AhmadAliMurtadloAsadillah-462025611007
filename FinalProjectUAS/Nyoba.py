@@ -1,5 +1,4 @@
-# Create the complete, production-ready Python source code reflecting the proposal and OOP architecture
-source_code = '''from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod
 import sqlite3
 import datetime
 
