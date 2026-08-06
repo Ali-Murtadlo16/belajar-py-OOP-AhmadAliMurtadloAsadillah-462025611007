@@ -1,13 +1,8 @@
 from abc import ABC, abstractmethod
 import sqlite3
 import datetime
-
-# ==========================================
-# 1. ABSTRACTION & DATABASE CONNECTION
-# ==========================================
 class KoneksiDatabase(ABC):
-    """Kelas abstrak untuk standarisasi manajemen basis data relasional SQLite."""
-    
+
     @abstractmethod
     def hubungkan(self):
         pass
@@ -22,8 +17,7 @@ class KoneksiDatabase(ABC):
 
 
 class DatabaseSQLite(KoneksiDatabase):
-    """Implementasi konkret dari KoneksiDatabase menggunakan SQLite."""
-    
+
     def __init__(self, nama_db="db_eperizinan.db"):
         self.nama_db = nama_db
         self.hubungkan()
@@ -34,7 +28,6 @@ class DatabaseSQLite(KoneksiDatabase):
         self.cursor = self.conn.cursor()
 
     def buat_tabel(self):
-        # 1. Tabel tbMahasiswa (Master Data)
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tbMahasiswa (
                 nim TEXT PRIMARY KEY,
@@ -45,7 +38,6 @@ class DatabaseSQLite(KoneksiDatabase):
             )
         ''')
 
-        # 2. Tabel tbPerizinan (Transaction Data)
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tbPerizinan (
                 idIzin INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,16 +59,11 @@ class DatabaseSQLite(KoneksiDatabase):
     def ambil_data(self, query, params=()):
         self.cursor.execute(query, params)
         return self.cursor.fetchall()
-
-
-# ==========================================
-# 2. INHERITANCE & ENCAPSULATION (PENGGUNA)
-# ==========================================
 class Pengguna(ABC):
     """Kelas Induk (Parent-Class) untuk seluruh entitas pengguna."""
-    
+
     def __init__(self, nama_lengkap, username):
-        self._namaLengkap = nama_lengkap  # Dilindungi (Encapsulation)
+        self._namaLengkap = nama_lengkap
         self._username = username
 
     @property
@@ -89,12 +76,10 @@ class Pengguna(ABC):
 
 
 class Mahasiswa(Pengguna):
-    """Sub-kelas Mahasiswa dengan enkapsulasi data privat."""
-    
     def __init__(self, nim, nama_lengkap, semester, prodi, password):
         super().__init__(nama_lengkap, nim)
-        self.__nim = nim  # Atribut Privat
-        self.__passwordAkun = password  # Atribut Privat
+        self.__nim = nim
+        self.__passwordAkun = password
         self.semester = semester
         self.prodi = prodi
 
@@ -120,7 +105,6 @@ class Mahasiswa(Pengguna):
         for row in data:
             print(f"ID: {row[0]} | Tujuan: {row[1]} | Alasan: {row[2]} | Keluar: {row[3]} | Kembali: {row[4] or 'Belum Kembali'} | Status: {row[5]}")
 
-    # Polymorphism: Implementasi khusus proses perintah CLI Mahasiswa
     def proses_perintah_cli(self, db):
         while True:
             print(f"\n=== MENU CLI MAHASISWA ({self._namaLengkap}) ===")
@@ -142,8 +126,7 @@ class Mahasiswa(Pengguna):
 
 
 class StaffDirektoratKepesantrenan(Pengguna):
-    """Sub-kelas Staff Direktorat Kepesantrenan."""
-    
+
     def __init__(self, id_staff, nama_lengkap, bagian):
         super().__init__(nama_lengkap, id_staff)
         self.idStaff = id_staff
@@ -151,19 +134,16 @@ class StaffDirektoratKepesantrenan(Pengguna):
 
     def lihat_semua_izin(self, db):
         query = """
-            SELECT p.idIzin, m.nim, m.namaLengkap, p.tujuan, p.waktuKeluar, p.statusIzin 
-            FROM tbPerizinan p 
+            SELECT p.idIzin, m.nim, m.namaLengkap, p.tujuan, p.waktuKeluar, p.statusIzin
+            FROM tbPerizinan p
             JOIN tbMahasiswa m ON p.nim = m.nim
         """
         return db.ambil_data(query)
 
     def otorisasi_izin(self, db, id_izin, keputusan):
-        # keputusan: 'Disetujui' atau 'Ditolak'
         query = "UPDATE tbPerizinan SET statusIzin = ? WHERE idIzin = ?"
         db.eksekusi_query(query, (keputusan, id_izin))
         print(f"\n[INFO] Perizinan ID {id_izin} berhasil diubah statusnya menjadi: {keputusan}")
-
-    # Polymorphism: Implementasi khusus proses perintah CLI Staff (Dasbor Pusat)
     def proses_perintah_cli(self, db):
         while True:
             print(f"\n=== DASBOR PUSAT STAF KEPESANTRENAN ({self._namaLengkap}) ===")
@@ -192,16 +172,16 @@ class StaffDirektoratKepesantrenan(Pengguna):
 
 class SatpamGerbangKampus(Pengguna):
     """Sub-kelas Satpam / Keamanan Gerbang Kampus."""
-    
+
     def __init__(self, no_pos, nama_petugas):
         super().__init__(nama_petugas, no_pos)
         self.noPosPenjaga = no_pos
 
     def validasi_akses_gerbang(self, db):
         query = """
-            SELECT p.idIzin, m.nim, m.namaLengkap, p.tujuan, p.statusIzin 
-            FROM tbPerizinan p 
-            JOIN tbMahasiswa m ON p.nim = m.nim 
+            SELECT p.idIzin, m.nim, m.namaLengkap, p.tujuan, p.statusIzin
+            FROM tbPerizinan p
+            JOIN tbMahasiswa m ON p.nim = m.nim
             WHERE p.statusIzin = 'Disetujui'
         """
         return db.ambil_data(query)
@@ -212,7 +192,6 @@ class SatpamGerbangKampus(Pengguna):
         db.eksekusi_query(query, (waktu_sekarang, nim))
         print(f"\n[INFO] Mahasiswa dengan NIM {nim} tercatat telah kembali ke kampus.")
 
-    # Polymorphism: Implementasi khusus proses perintah CLI Satpam
     def proses_perintah_cli(self, db):
         while True:
             print(f"\n=== MONITOR POS GERBANG UTAMA (Pos {self.noPosPenjaga}) ===")
@@ -235,23 +214,14 @@ class SatpamGerbangKampus(Pengguna):
                 break
             else:
                 print("Pilihan tidak valid.")
-
-
-# ==========================================
-# 3. UTILITY & SEEDING DATA AWAL
-# ==========================================
 def inisialisasi_data_dummy(db):
     cek = db.ambil_data("SELECT COUNT(*) FROM tbMahasiswa")
     if cek[0][0] == 0:
-        db.eksekusi_query("INSERT INTO tbMahasiswa VALUES (?, ?, ?, ?, ?)", 
+        db.eksekusi_query("INSERT INTO tbMahasiswa VALUES (?, ?, ?, ?, ?)",
                            ("462025611007", "Ahmad Ali Murtadlo Asadillah", 4, "Teknik Informatika", "password123"))
-        db.eksekusi_query("INSERT INTO tbMahasiswa VALUES (?, ?, ?, ?, ?)", 
+        db.eksekusi_query("INSERT INTO tbMahasiswa VALUES (?, ?, ?, ?, ?)",
                            ("462025611999", "Fulan bin Fulan", 2, "Teknik Informatika", "password456"))
 
-
-# ==========================================
-# 4. MAIN PROGRAM (CLI INTERACTION)
-# ==========================================
 def main():
     db = DatabaseSQLite()
     inisialisasi_data_dummy(db)
@@ -267,13 +237,13 @@ def main():
         print("2. Login sebagai Staff Direktorat Kepesantrenan")
         print("3. Login sebagai Satpam Pos Gerbang")
         print("4. Keluar Aplikasi")
-        
+
         role = input("Pilih hak akses login (1-4): ")
 
         if role == '1':
             nim_input = input("Masukkan NIM Mahasiswa: ")
             pwd_input = input("Masukkan Password: ")
-            
+
             res = db.ambil_data("SELECT nim, namaLengkap, semester, prodi, password FROM tbMahasiswa WHERE nim = ?", (nim_input,))
             if res and res[0][4] == pwd_input:
                 mhs_obj = Mahasiswa(res[0][0], res[0][1], res[0][2], res[0][3], res[0][4])
