@@ -37,7 +37,7 @@ Steps to Run the Code
 Clone this repository to your local machine:
 
 ```bash
-git clone [https://github.com/Alimurtadlo16/belajar-py-OOP-AhmadAliMurtadloAsadillah-462025611007.git](https://github.com/Alimurtadlo16/belajar-py-OOP-AhmadAliMurtadloAsadillah-462025611007.git)
+git clone https://github.com/Ali-Murtadlo16/belajar-py-OOP-AhmadAliMurtadloAsadillah-462025611007.git
 ```
 
 Navigate to the project folder directory or the specific .py file you wish to run using the terminal.
@@ -46,7 +46,7 @@ Run the Python file using the following command:
 
 #LINUX/MAC 
 ```bash
-python nama_file.cpp
+python nama_file.py
 ```
 
 # WINDOWS
