@@ -1,0 +1,32 @@
+# =====================================================================
+# E-Perizinan UNIDA Gontor CLI - Requirements & Dependencies Configuration
+# =====================================================================
+#
+# Proyek ini dirancang secara mandiri menggunakan pustaka bawaan
+# (Python Built-in Standard Library) tanpa memerlukan instalasi paket
+# pihak ketiga (third-party packages) tambahan dari PyPI. Hal ini membuat
+# aplikasi bersifat ringan, cepat, dan mandiri (standalone).
+#
+# Modul Standar Python yang Digunakan:
+# ---------------------------------------------------------------------
+
+# 1. sqlite3
+#    Fungsi: Mengelola basis data relasional lokal (Single Source of Truth).
+#    Penerapan pada Proyek: Membuat tabel master mahasiswa (tbMahasiswa),
+#    tabel transaksi perizinan (tbPerizinan), eksekusi kueri SQL secara
+#    langsung, serta penyimpanan data secara real-time.
+sqlite3
+
+# 2. datetime
+#    Fungsi: Mengelola manipulasi tanggal dan waktu sistem secara otomatis.
+#    Penerapan pada Proyek: Mencatat timestamp persis saat mahasiswa
+#    mengajukan perizinan keluar kampus dan mencatat waktu kepulangan
+#    mereka kembali ke lingkungan pesantren.
+datetime
+
+# 3. abc (Abstract Base Classes)
+#    Fungsi: Menyediakan infrastruktur untuk mendefinisikan kelas abstrak di Python.
+#    Penerapan pada Proyek: Menerapkan pilar OOP 'Abstraction' melalui kelas
+#    KoneksiDatabase dan kelas abstrak Pengguna guna memastikan struktur
+#    metode wajib pada setiap sub-kelas turunannya.
+abc
