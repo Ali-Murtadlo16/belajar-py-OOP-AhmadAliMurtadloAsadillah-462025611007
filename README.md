@@ -44,7 +44,7 @@ Navigate to the project folder directory or the specific .py file you wish to ru
 
 Run the Python file using the following command:
 
-#LINUX/MAC 
+# LINUX/MAC 
 ```bash
 python nama_file.py
 ```
