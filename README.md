@@ -44,8 +44,14 @@ Navigate to the project folder directory or the specific .py file you wish to ru
 
 Run the Python file using the following command:
 
+#LINUX/MAC 
 ```bash
 python nama_file.cpp
+```
+
+# WINDOWS
+```bash
+py nama_file.py
 ```
 
 (Adjust file_name.py according to the actual OOP file you want to test)
